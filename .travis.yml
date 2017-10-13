@@ -4,10 +4,11 @@ python:
 install:
   - pip install -r requirements.txt
   - pip install coverage
+  - pip install codecov
 script:
   - python setup.py flake8
   - python setup.py test
   - coverage run setup.py test
 
 after_success:
-  - codecov --token=53f770ee-173f-4c40-adc6-853f631d3bf8
+  - codecov
