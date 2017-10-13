@@ -10,4 +10,4 @@ script:
   - coverage run setup.py test
 
 after_success:
-  - codecov
+  - codecov --token=53f770ee-173f-4c40-adc6-853f631d3bf8
