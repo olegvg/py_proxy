@@ -1,18 +1,23 @@
 import re
 import asyncio
-import uvloop
 from aiohttp import web, TCPConnector, request
 import multidict
 from lxml import html
 
 
 class Proxy:
-    def __init__(self):
+    def __init__(self, port):
         self.loop = asyncio.get_event_loop()
+        self.port = port
         self.client_connector = None
         self.request_funcs = {}
 
     def ensure_connector(self):
+        """
+        You may see 'Unclosed client session' in stderr.
+        Because fuck that's why:
+        https://github.com/aio-libs/aiohttp/issues/1175
+        """
         if self.client_connector is None or self.client_connector.closed:
             self.client_connector = TCPConnector(loop=self.loop)
 
@@ -20,6 +25,13 @@ class Proxy:
         self.loop.run_until_complete(self.proxy_server())
 
     def stop(self):
+        if self.client_connector:
+            self.client_connector.close()
+        tasks = asyncio.gather(*asyncio.Task.all_tasks(loop=self.loop),
+                               return_exceptions=True)
+        tasks.cancel()
+        self.loop.run_until_complete(tasks)
+        self.loop.stop()
         self.loop.close()
 
     async def proxy_handler(self, req):
@@ -96,19 +108,8 @@ class Proxy:
 
     async def proxy_server(self):
         server = web.Server(self.proxy_handler)
-        async_server = await self.loop.create_server(server, "127.0.0.1", 8080)
+        async_server = await self.loop.create_server(
+            server,
+            "127.0.0.1",
+            self.port)
         await async_server.wait_closed()
-
-
-if __name__ == '__main__':
-    loop = uvloop.new_event_loop()
-    asyncio.set_event_loop(loop)
-
-    proxy = Proxy()
-
-    try:
-        proxy.serve()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        proxy.stop()
