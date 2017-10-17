@@ -2,15 +2,19 @@ import re
 import asyncio
 from aiohttp import web, TCPConnector, request
 import multidict
-from lxml import html
+from lxml import html as lhtml
+import html as shtml
 
 
 class Proxy:
+    tag_subst = '™'
+
     def __init__(self, port):
         self.loop = asyncio.get_event_loop()
         self.port = port
         self.client_connector = None
         self.request_funcs = {}
+        self.url_subst = 'http://127.0.0.1:{}/'.format(port)
 
     def ensure_connector(self):
         """
@@ -71,7 +75,9 @@ class Proxy:
                 content = content.decode(resp.charset
                                          if resp.charset else 'UTF-8')
 
-                content = self.alter_content(content)
+                content = self.alter_content(content,
+                                             self.url_subst,
+                                             self.tag_subst)
 
                 content = content.encode(resp.charset
                                          if resp.charset else 'UTF-8')
@@ -82,27 +88,29 @@ class Proxy:
             return proxy_resp
 
     @staticmethod
-    def alter_content(content):
+    def alter_content(content, url_subst, tag_subst):
         content = re.sub(
             r'https://habrahabr\.ru/',
-            'http://127.0.0.1:8080/',
+            url_subst,
             content,
             flags=re.S)
 
-        tree = html.fromstring(content)
+        tree = lhtml.fromstring(content)
 
-        match_conditon = r'(^|\s)(\w{6})($|\s)'
-        subst = r'\1\2™\3'
+        match_conditon = r'(^|\s|\W)(\w{6})($|\s|\W)'
+        subst = r'\1\2{}\3'.format(tag_subst)
         for element in tree.getiterator():
             if element.tag in ('script', 'style'):
                 continue
 
             if isinstance(element.text, str):
                 element.text = re.sub(match_conditon, subst, element.text)
+                element.text = shtml.unescape(element.text)
             if isinstance(element.tail, str):
                 element.tail = re.sub(match_conditon, subst, element.tail)
+                element.tail = shtml.unescape(element.tail)
 
-        content = html.tostring(tree, encoding='unicode')
+        content = lhtml.tostring(tree, encoding='unicode')
 
         return content
 
