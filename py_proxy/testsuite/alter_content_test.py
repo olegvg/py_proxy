@@ -24,5 +24,6 @@ class TestAlterContent(unittest.TestCase):
 
     def test_broader_tag_escaping(self):
         self.assertEqual(
-            self.alter_content("<strong>Erlang/OTP</strong>"), "<strong>Erlang™/OTP</strong>"
+            self.alter_content("<strong>Erlang/OTP</strong>"),
+            "<strong>Erlang™/OTP</strong>"
         )
