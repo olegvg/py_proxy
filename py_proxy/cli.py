@@ -11,6 +11,7 @@ def serve(port):
     asyncio.set_event_loop(loop)
 
     proxy = Proxy(port)
+    print('Starting habrahabr proxy at http://127.0.0.1:{}/'.format(port))
 
     try:
         proxy.serve()
