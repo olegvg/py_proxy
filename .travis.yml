@@ -1,13 +1,12 @@
 language: python
 python:
-  - "3.5"
+  - "3.7"
 install:
-  - pip install -r requirements.txt
-  - pip install coverage
-  - pip install codecov
+  - make setup-all
+  - pipenv install --dev codecov
 script:
-  - python setup.py flake8
-  - coverage run setup.py test
+  - pipenv run flake8 py_proxy testsuite
+  - pipenv run coverage run setup.py test
 
 after_success:
-  - codecov
+  - pipenv run codecov

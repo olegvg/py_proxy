@@ -1,18 +1,18 @@
-from pip.req import parse_requirements
 from setuptools import setup
+from pipenv.project import Project
+from pipenv.utils import convert_deps_to_pip
 
-reqs = [str(ir.req) for ir in
-        parse_requirements('requirements.txt', session='')]
+pfile = Project(chdir=False).parsed_pipfile
+requirements = convert_deps_to_pip(pfile['packages'], r=False)
+test_requirements = convert_deps_to_pip(pfile['dev-packages'], r=False)
 
-tests_require = [
-]
 
 setup(
     name='py_proxy',
     version='0.1',
     packages=['py_proxy'],
-    test_suite='py_proxy.testsuite',
-    install_requires=reqs,
+    test_suite='testsuite',
+    install_requires=requirements,
     entry_points={
         'console_scripts': [
             'py_proxy=py_proxy.cli:main'
@@ -20,9 +20,10 @@ setup(
     },
     setup_requires=[
         'flake8',
-        'wheel'
+        'wheel',
+        'pipenv'
     ],
     zip_safe=True,
-    tests_require=tests_require,
-    python_requires='>=3.5'
+    tests_require=test_requirements,
+    python_requires='>=3.7'
 )
