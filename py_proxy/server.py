@@ -3,7 +3,7 @@ import asyncio
 from http.cookies import SimpleCookie
 import html as shtml
 
-from aiohttp import web, TCPConnector, request
+from aiohttp import web, request
 import multidict
 from lxml import html as lhtml
 
@@ -12,7 +12,6 @@ class Proxy:
     tag_subst = '™'
 
     loop = asyncio.get_event_loop()
-    client_connector = None
     request_funcs = {}
 
     def __init__(self, listen_host: str, listen_port: int, subst_host: str, subst_port: int):
@@ -42,8 +41,7 @@ class Proxy:
             method=req.method,
             url=url,
             headers=req_headers,
-            cookies=SimpleCookie(req.cookies),
-            connector=self.client_connector
+            cookies=SimpleCookie(req.cookies)
         ) as resp:
             content = await resp.read()
 
