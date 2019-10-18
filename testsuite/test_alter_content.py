@@ -1,5 +1,4 @@
 import unittest
-from functools import partial
 from py_proxy import server
 
 
