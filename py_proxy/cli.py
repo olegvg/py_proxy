@@ -24,8 +24,6 @@ def serve(listen_host, listen_port, subst_host, subst_port):
     except KeyboardInterrupt:
         logger.info(f'Got KeyboardInterrupt and shutting down...')
     finally:
-        proxy.stop()
-
         loop = asyncio.get_event_loop()
         tasks = asyncio.gather(*asyncio.Task.all_tasks(loop=loop), return_exceptions=False)
         tasks.cancel()

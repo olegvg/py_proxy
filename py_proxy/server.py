@@ -20,24 +20,10 @@ class Proxy:
         self.listen_port = listen_port
         self.url_subst = f'http://{subst_host}:{subst_port}/'
 
-    def ensure_connector(self):
-        """
-        You may see 'Unclosed client session' in stderr.
-        Because fuck that's why:
-        https://github.com/aio-libs/aiohttp/issues/1175
-        """
-        if self.client_connector is None or self.client_connector.closed:
-            self.client_connector = TCPConnector(loop=self.loop)
-
     def serve(self):
         self.loop.run_until_complete(self.proxy_server())
 
-    def stop(self):
-        if self.client_connector:
-            self.client_connector.close()
-
     async def proxy_handler(self, req: web.BaseRequest) -> web.StreamResponse:
-        self.ensure_connector()
 
         url = req.url.\
             with_host('habr.com')\
