@@ -3,7 +3,7 @@ import asyncio
 from http.cookies import SimpleCookie
 import html as shtml
 
-from aiohttp import web, request
+from aiohttp import web, ClientSession
 import multidict
 from lxml import html as lhtml
 
@@ -15,6 +15,7 @@ class Proxy:
     request_funcs = {}
 
     def __init__(self, listen_host: str, listen_port: int, subst_host: str, subst_port: int):
+        self.session = ClientSession()
         self.listen_host = listen_host
         self.listen_port = listen_port
         self.url_subst = f'http://{subst_host}:{subst_port}/'
@@ -22,35 +23,25 @@ class Proxy:
     def serve(self):
         self.loop.run_until_complete(self.proxy_server())
 
-    async def proxy_handler(self, req: web.BaseRequest) -> web.StreamResponse:
+    async def proxy_handler(self, req: web.BaseRequest) -> web.Response:
 
-        url = req.url.\
-            with_host('habr.com')\
-            .with_port(None)\
-            .with_scheme('https')
+        url = req.url.with_host('habr.com').with_port(None).with_scheme('https')
 
         req_headers = multidict.CIMultiDict(req.headers)
 
         req_headers.pop('Accept-Encoding', None)
-        req_headers['Connection'] = 'close'
         req_headers.pop('Host', None)
         if req_headers.get('Referer', None):
             req_headers['Referer'] = req_headers['Referer'].replace(self.url_subst, 'https://habr.com/')
 
-        async with request(
-            method=req.method,
-            url=url,
-            headers=req_headers,
-            cookies=SimpleCookie(req.cookies)
-        ) as resp:
+        async with self.session.request(req.method, url, headers=req_headers, cookies=SimpleCookie(req.cookies)) as resp:
             content = await resp.read()
 
             resp_headers = multidict.CIMultiDict(resp.headers)
             resp_headers.pop('Transfer-Encoding', None)
             resp_headers.pop('Content-Encoding', None)
-            resp_headers['Connection'] = 'close'
 
-            proxy_resp = web.StreamResponse(headers=resp_headers, status=resp.status)
+            proxy_resp = web.Response(headers=resp_headers, status=resp.status)
 
             valid_cookie_attrs = ['expires', 'path', 'domain', 'max-age', 'secure', 'version', 'httponly', 'samesite']
             for name, cookie in resp.cookies.items():
@@ -66,16 +57,11 @@ class Proxy:
 
                 content = content.encode(resp.charset if resp.charset else 'UTF-8')
 
-            await proxy_resp.prepare(req)
-            await proxy_resp.write(content)
-            return proxy_resp
+            proxy_resp.body = content
+        return proxy_resp
 
     def alter_content(self, content: str):
-        content = re.sub(
-            r'https://habr\.com/',
-            self.url_subst,
-            content,
-            flags=re.S)
+        content = re.sub(r'https://habr\.com/', self.url_subst, content, flags=re.S)
 
         tree = lhtml.fromstring(content)
 
