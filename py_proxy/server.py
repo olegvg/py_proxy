@@ -10,14 +10,14 @@ from lxml import html as lhtml
 
 class Proxy:
     tag_subst = '™'
+
     loop = asyncio.get_event_loop()
+    client_connector = None
+    request_funcs = {}
 
     def __init__(self, listen_host: str, listen_port: int, subst_host: str, subst_port: int):
-        self.loop = asyncio.get_event_loop()
         self.listen_host = listen_host
         self.listen_port = listen_port
-        self.client_connector = None
-        self.request_funcs = {}
         self.url_subst = f'http://{subst_host}:{subst_port}/'
 
     def ensure_connector(self):
@@ -46,7 +46,7 @@ class Proxy:
         self.ensure_connector()
 
         url = req.url.\
-            with_host('habrahabr.ru')\
+            with_host('habr.com')\
             .with_port(None)\
             .with_scheme('https')
 
@@ -56,10 +56,7 @@ class Proxy:
         req_headers['Connection'] = 'close'
         req_headers.pop('Host', None)
         if req_headers.get('Referer', None):
-            req_headers['Referer'] = re.sub(
-                r'http://127\.0\.0\.1:8080/',
-                'https://habr.com/',
-                req_headers['Referer'])
+            req_headers['Referer'] = req_headers['Referer'].replace(self.url_subst, 'https://habr.com/')
 
         async with request(
             method=req.method,
