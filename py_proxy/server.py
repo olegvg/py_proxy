@@ -35,12 +35,6 @@ class Proxy:
     def stop(self):
         if self.client_connector:
             self.client_connector.close()
-        tasks = asyncio.gather(*asyncio.Task.all_tasks(loop=self.loop),
-                               return_exceptions=True)
-        tasks.cancel()
-        self.loop.run_until_complete(tasks)
-        self.loop.stop()
-        self.loop.close()
 
     async def proxy_handler(self, req: web.BaseRequest) -> web.StreamResponse:
         self.ensure_connector()
