@@ -11,10 +11,8 @@ from lxml import html as lhtml
 class Proxy:
     tag_subst = '™'
 
-    loop = asyncio.get_event_loop()
-    request_funcs = {}
-
     def __init__(self, listen_host: str, listen_port: int, subst_host: str, subst_port: int):
+        self.loop = asyncio.get_event_loop()
         self.session = ClientSession()
         self.listen_host = listen_host
         self.listen_port = listen_port
@@ -24,7 +22,6 @@ class Proxy:
         self.loop.run_until_complete(self.proxy_server())
 
     async def proxy_handler(self, req: web.BaseRequest) -> web.Response:
-
         url = req.url.with_host('habr.com').with_port(None).with_scheme('https')
 
         req_headers = multidict.CIMultiDict(req.headers)
