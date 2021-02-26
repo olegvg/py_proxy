@@ -11,7 +11,7 @@ coverage = "~=4.5"
 
 [packages]
 lxml = "~=4.4"
-aiohttp = "~=3.6"
+aiohttp = "~=3.7"
 async-timeout = "~=3.0"
 multidict = "~=4.5"
 yarl = "~=1.3"
