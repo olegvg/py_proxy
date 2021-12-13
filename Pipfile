@@ -10,7 +10,7 @@ wheel = "~=0.33"
 coverage = "~=4.5"
 
 [packages]
-lxml = "~=4.4"
+lxml = "~=4.6"
 aiohttp = "~=3.6"
 async-timeout = "~=3.0"
 multidict = "~=4.5"
