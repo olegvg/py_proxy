@@ -6,7 +6,7 @@ verify_ssl = true
 [dev-packages]
 pipenv = ">=2018.11.26"
 flake8 = "~=3.7"
-wheel = "~=0.33"
+wheel = "~=0.38"
 coverage = "~=4.5"
 
 [packages]
